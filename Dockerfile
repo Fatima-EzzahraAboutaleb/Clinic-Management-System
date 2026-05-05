@@ -1,8 +1,9 @@
 FROM php:8.1-apache
 
-# Fix: disable conflicting MPMs, enable only prefork
-RUN a2dismod mpm_event mpm_worker 2>/dev/null; \
-    a2enmod mpm_prefork rewrite
+# Explicitly fix MPM conflict
+RUN a2dismod mpm_event || true && \
+    a2dismod mpm_worker || true && \
+    a2enmod mpm_prefork
 
 WORKDIR /var/www/html/
 
