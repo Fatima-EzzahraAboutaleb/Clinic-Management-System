@@ -129,18 +129,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="login-container">
         <h1>🏥 Clinic Management</h1>
-        <p class="subtitle">UNSECURED VERSION - V0</p>
 
         <?php if (!empty($error)): ?>
             <div class="alert"><?php echo htmlspecialchars($error); ?></div>
         <?php endif; ?>
 
-        <div class="demo-info">
+        <!-- <div class="demo-info">
             <strong>Demo Credentials:</strong><br>
             Admin: username=admin, password=admin<br>
             Doctor: username=doctor, password=doctor<br>
             Patient: username=patient, password=patient
-        </div>
+        </div> -->
 
         <form method="POST">
             <div class="form-group">
