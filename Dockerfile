@@ -1,16 +1,24 @@
-FROM php:8.1-apache
+FROM ubuntu:22.04
 
-# Nuclear option - remove ALL mpm modules and reinstall only prefork
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && \
-    apt-get remove -y apache2 && \
-    apt-get install -y apache2 && \
-    a2dismod mpm_event mpm_worker mpm_prefork || true && \
+    apt-get install -y apache2 php8.1 php8.1-mysql libapache2-mod-php8.1 && \
+    apt-get clean
+
+# Disable ALL MPMs then enable only prefork
+RUN a2dismod mpm_event mpm_worker mpm_prefork 2>/dev/null || true && \
     a2enmod mpm_prefork && \
-    echo "ServerName localhost" >> /etc/apache2/apache2.conf
+    a2enmod php8.1
+
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 WORKDIR /var/www/html/
+RUN rm -f index.html
 
 COPY . .
+
+RUN chown -R www-data:www-data /var/www/html/
 
 EXPOSE 80
 
