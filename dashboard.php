@@ -2,7 +2,6 @@
 session_start();
 require_once 'config/database.php';
 
-// VULNERABLE: No proper authentication check
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
@@ -13,7 +12,6 @@ $role = $_SESSION['role'];
 $username = $_SESSION['username'];
 $full_name = $_SESSION['full_name'];
 
-// Get statistics based on role
 $stats = [
     'patients' => 0,
     'doctors' => 0,
@@ -196,20 +194,7 @@ $stats['prescriptions'] = $result->fetch_assoc()['count'];
                     </div>
                 </div>
 
-                <div style="margin-top: 40px; padding: 20px; background: white; border-radius: 10px;">
-                    <h5>⚠️ Security Notice</h5>
-                    <p style="color: #dc3545; margin: 0;">
-                        <strong>This is UNSECURED VERSION V0 - For Educational Purposes Only!</strong><br>
-                        This system intentionally contains security vulnerabilities including:
-                        <ul style="margin-top: 10px;">
-                            <li>SQL Injection vulnerabilities</li>
-                            <li>XSS vulnerabilities</li>
-                            <li>Plaintext passwords</li>
-                            <li>No CSRF protection</li>
-                            <li>No role-based access control</li>
-                        </ul>
-                    </p>
-                </div>
+                
             </div>
         </div>
     </div>

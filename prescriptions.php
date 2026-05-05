@@ -14,7 +14,6 @@ $error = '';
 
 // Handle Add Prescription
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_prescription'])) {
-    // VULNERABLE: No input validation
     $patient_id = $_POST['patient_id'];
     $doctor_id = $_POST['doctor_id'];
     $medication_name = $_POST['medication_name'];
@@ -22,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_prescription'])) 
     $duration = $_POST['duration'];
     $notes = $_POST['notes'];
 
-    // VULNERABLE: SQL Injection - Raw queries
     $insert_query = "INSERT INTO prescriptions (patient_id, doctor_id, medication_name, dosage, duration, notes) 
                      VALUES ($patient_id, $doctor_id, '$medication_name', '$dosage', '$duration', '$notes')";
     
@@ -33,11 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_prescription'])) 
     }
 }
 
-// Handle Delete Prescription
 if (isset($_GET['delete'])) {
     $prescription_id = $_GET['delete'];
     
-    // VULNERABLE: No permission checks
     $delete_query = "DELETE FROM prescriptions WHERE id = $prescription_id";
     
     if ($conn->query($delete_query) === TRUE) {
@@ -69,7 +65,6 @@ if ($role === 'patient') {
         $prescriptions_query = "SELECT 1 WHERE 0";
     }
 } else {
-    // Admin and Doctor can see all
     $prescriptions_query = "SELECT p.*, u.full_name as doctor_name, pat.id as patient_id, pu.full_name as patient_name 
                             FROM prescriptions p 
                             JOIN doctors d ON p.doctor_id = d.id 
@@ -81,7 +76,6 @@ if ($role === 'patient') {
 
 $prescriptions_result = $conn->query($prescriptions_query);
 
-// Fetch patients and doctors for dropdowns
 $patients_query = "SELECT p.id, u.full_name FROM patients p JOIN users u ON p.user_id = u.id";
 $patients_result = $conn->query($patients_query);
 
@@ -282,7 +276,6 @@ $doctors_result = $conn->query($doctors_query);
                                             <td><?php echo htmlspecialchars($prescription['dosage']); ?></td>
                                             <td><?php echo htmlspecialchars($prescription['duration']); ?></td>
                                             <td>
-                                                <!-- VULNERABLE: XSS - Direct echo -->
                                                 <small><?php echo substr($prescription['notes'], 0, 30); ?></small>
                                             </td>
                                             <td><?php echo substr($prescription['created_at'], 0, 10); ?></td>

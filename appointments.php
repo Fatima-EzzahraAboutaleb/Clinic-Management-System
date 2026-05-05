@@ -14,14 +14,12 @@ $error = '';
 
 // Handle Add Appointment
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
-    // VULNERABLE: No input validation
     $patient_id = $_POST['patient_id'];
     $doctor_id = $_POST['doctor_id'];
     $appointment_date = $_POST['appointment_date'];
     $reason = $_POST['reason'];
     $notes = $_POST['notes'];
 
-    // VULNERABLE: SQL Injection - No prepared statements
     $insert_query = "INSERT INTO appointments (patient_id, doctor_id, appointment_date, reason, notes, status) 
                      VALUES ($patient_id, $doctor_id, '$appointment_date', '$reason', '$notes', 'scheduled')";
     
@@ -36,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
 if (isset($_GET['delete'])) {
     $appointment_id = $_GET['delete'];
     
-    // VULNERABLE: No validation or permission checks
     $delete_query = "DELETE FROM appointments WHERE id = $appointment_id";
     
     if ($conn->query($delete_query) === TRUE) {
@@ -51,7 +48,6 @@ if (isset($_GET['update_status'])) {
     $appointment_id = $_GET['update_status'];
     $status = $_GET['status'];
     
-    // VULNERABLE: No input validation
     $update_query = "UPDATE appointments SET status = '$status' WHERE id = $appointment_id";
     
     if ($conn->query($update_query) === TRUE) {

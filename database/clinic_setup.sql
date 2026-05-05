@@ -1,10 +1,10 @@
 -- Clinic Management System Database Schema
--- VULNERABLE VERSION - V0
+
 
 CREATE DATABASE IF NOT EXISTS clinic_management;
 USE clinic_management;
 
--- Users Table (VULNERABLE: passwords stored in plain text)
+-- Users Table 
 CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,

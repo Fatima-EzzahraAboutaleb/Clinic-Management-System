@@ -12,15 +12,11 @@ $role = $_SESSION['role'];
 $success = '';
 $error = '';
 
-// VULNERABLE: No role-based access control
-// Anyone can access this page if they know the URL
 
 // Handle Delete User
 if (isset($_GET['delete'])) {
     $delete_id = $_GET['delete'];
     
-    // VULNERABLE: No CSRF protection, direct deletion
-    // Also no verification that the user is admin
     $delete_query = "DELETE FROM users WHERE id = $delete_id";
     
     if ($conn->query($delete_query) === TRUE) {
@@ -201,16 +197,7 @@ $users_result = $conn->query($users_query);
                     </div>
                 </div>
 
-                <!-- Security Warning -->
-                <div style="margin-top: 40px; padding: 20px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 10px;">
-                    <h5 style="color: #856404;">⚠️ VULNERABILITY DEMONSTRATION</h5>
-                    <ul style="color: #856404; margin: 0;">
-                        <li><strong>Password Visibility:</strong> Passwords are stored and displayed in plain text</li>
-                        <li><strong>No Authorization Check:</strong> Any logged-in user can access this page</li>
-                        <li><strong>No CSRF Token:</strong> Delete operations lack CSRF protection</li>
-                        <li><strong>Direct User Deletion:</strong> No confirmation workflow or audit log</li>
-                    </ul>
-                </div>
+                
             </div>
         </div>
     </div>

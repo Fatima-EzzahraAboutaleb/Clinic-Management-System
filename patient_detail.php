@@ -9,7 +9,6 @@ if (!isset($_SESSION['user_id'])) {
 
 $patient_id = $_GET['id'] ?? 0;
 
-// VULNERABLE: No input validation or authorization check
 $query = "SELECT p.*, u.full_name, u.username, u.email, u.phone as user_phone, u.role 
           FROM patients p 
           JOIN users u ON p.user_id = u.id 
@@ -24,7 +23,6 @@ if ($result->num_rows === 0) {
 
 $patient = $result->fetch_assoc();
 
-// Get patient's appointments
 $appointments_query = "SELECT a.*, d.id as doctor_id, du.full_name as doctor_name 
                        FROM appointments a 
                        JOIN doctors d ON a.doctor_id = d.id 
@@ -35,7 +33,6 @@ $appointments_query = "SELECT a.*, d.id as doctor_id, du.full_name as doctor_nam
 
 $appointments_result = $conn->query($appointments_query);
 
-// Get patient's prescriptions
 $prescriptions_query = "SELECT p.*, du.full_name as doctor_name 
                         FROM prescriptions p 
                         JOIN doctors d ON p.doctor_id = d.id 
@@ -112,7 +109,6 @@ $prescriptions_result = $conn->query($prescriptions_query);
                             <div class="col-md-6">
                                 <div class="info-label">Full Name:</div>
                                 <div class="info-value">
-                                    <!-- VULNERABLE: XSS - Direct echo -->
                                     <?php echo htmlspecialchars($patient['full_name']); ?>
                                 </div>
 
@@ -144,7 +140,6 @@ $prescriptions_result = $conn->query($prescriptions_query);
 
                         <div class="info-label">Medical History:</div>
                         <div class="info-value">
-                            <!-- VULNERABLE: XSS - Long medical history displayed -->
                             <textarea class="form-control" rows="5" readonly><?php echo htmlspecialchars($patient['medical_history']); ?></textarea>
                         </div>
                     </div>

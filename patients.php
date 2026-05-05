@@ -2,7 +2,6 @@
 session_start();
 require_once 'config/database.php';
 
-// VULNERABLE: No role-based access control
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit();
@@ -15,9 +14,7 @@ $action = $_GET['action'] ?? '';
 $success = '';
 $error = '';
 
-// Handle Add Patient
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_patient'])) {
-    // VULNERABLE: No input validation
     $age = $_POST['age'];
     $gender = $_POST['gender'];
     $phone = $_POST['phone'];
@@ -27,14 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_patient'])) {
     $email = $_POST['email'];
     $full_name = $_POST['full_name'];
 
-    // VULNERABLE: SQL Injection
     $insert_user = "INSERT INTO users (username, password, email, full_name, role, phone) 
                     VALUES ('$username', '$password', '$email', '$full_name', 'patient', '$phone')";
     
     if ($conn->query($insert_user) === TRUE) {
         $patient_user_id = $conn->insert_id;
         
-        // VULNERABLE: SQL Injection
         $insert_patient = "INSERT INTO patients (user_id, age, gender, medical_history, phone) 
                            VALUES ($patient_user_id, $age, '$gender', '$medical_history', '$phone')";
         
@@ -48,12 +43,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_patient'])) {
     }
 }
 
-// Handle Delete Patient
 if (isset($_GET['delete'])) {
     $patient_id = $_GET['delete'];
     
-    // VULNERABLE: No CSRF protection, direct deletion
-    // First, get user_id from patient
     $query = "SELECT user_id FROM patients WHERE id = $patient_id";
     $result = $conn->query($query);
     
@@ -286,7 +278,6 @@ $patients_result = $conn->query($patients_query);
                                             <td><?php echo htmlspecialchars($patient['phone']); ?></td>
                                             <td>
                                                 <small>
-                                                    <!-- VULNERABLE: XSS - Directly echoing user input -->
                                                     <?php echo substr($patient['medical_history'], 0, 50); ?>
                                                     <?php if (strlen($patient['medical_history']) > 50): ?>...<?php endif; ?>
                                                 </small>

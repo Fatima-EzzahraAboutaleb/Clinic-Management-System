@@ -5,7 +5,6 @@ $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // VULNERABLE: No input validation or sanitization
     $username = $_POST['username'];
     $password = $_POST['password'];
     $email = $_POST['email'];
@@ -13,14 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role = $_POST['role'];
     $phone = $_POST['phone'] ?? '';
 
-    // VULNERABLE: SQL Injection - Direct query without prepared statements
     $check_query = "SELECT * FROM users WHERE username = '$username'";
     $result = $conn->query($check_query);
 
     if ($result->num_rows > 0) {
         $error = "Username already exists!";
     } else {
-        // VULNERABLE: Passwords stored in plain text (NO hashing)
         $insert_query = "INSERT INTO users (username, password, email, full_name, role, phone) 
                          VALUES ('$username', '$password', '$email', '$full_name', '$role', '$phone')";
         
