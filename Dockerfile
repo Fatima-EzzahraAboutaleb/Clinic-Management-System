@@ -1,15 +1,17 @@
 FROM php:8.1-apache
 
-RUN sed -i 's/^#\(.*mpm_prefork\)/\1/' /etc/apache2/mods-enabled/*.conf 2>/dev/null || true
-
-RUN cd /etc/apache2/mods-enabled && \
-    rm -f mpm_event.conf mpm_event.load \
-          mpm_worker.conf mpm_worker.load && \
-    ln -sf ../mods-available/mpm_prefork.conf mpm_prefork.conf && \
-    ln -sf ../mods-available/mpm_prefork.load mpm_prefork.load
+# Nuclear option - remove ALL mpm modules and reinstall only prefork
+RUN apt-get update && \
+    apt-get remove -y apache2 && \
+    apt-get install -y apache2 && \
+    a2dismod mpm_event mpm_worker mpm_prefork || true && \
+    a2enmod mpm_prefork && \
+    echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 WORKDIR /var/www/html/
 
 COPY . .
 
 EXPOSE 80
+
+CMD ["apache2ctl", "-D", "FOREGROUND"]
