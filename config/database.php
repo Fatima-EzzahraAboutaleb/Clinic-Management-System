@@ -1,9 +1,9 @@
 <?php
-$host = getenv('MYSQLHOST');
-$user = getenv('MYSQLUSER');
-$password = getenv('MYSQLPASSWORD');
-$database = getenv('MYSQLDATABASE');
-$port = getenv('MYSQLPORT');
+$host = getenv('MYSQLHOST');      // mysql.railway.internal
+$user = getenv('MYSQLUSER');      // The actual MySQL user (NOT root)
+$password = getenv('MYSQLPASSWORD'); // The actual MySQL password
+$database = getenv('MYSQLDATABASE'); // The actual database name
+$port = getenv('MYSQLPORT');      // 3306
 
 $conn = new mysqli($host, $user, $password, $database, $port);
 
