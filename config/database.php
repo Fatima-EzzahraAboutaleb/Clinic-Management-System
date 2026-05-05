@@ -1,10 +1,15 @@
 <?php
-$mysql_url = getenv('MYSQL_URL');
+$host = getenv('MYSQLHOST');
+$user = getenv('MYSQLUSER');
+$password = getenv('MYSQLPASSWORD');
+$database = getenv('MYSQLDATABASE');
+$port = getenv('MYSQLPORT');
 
-try {
-    $pdo = new PDO($mysql_url);
-    echo "Connected successfully";
-} catch (PDOException $e) {
-    die("Connection failed: " . $e->getMessage());
+$conn = new mysqli($host, $user, $password, $database, $port);
+
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
+
+echo "Connected successfully";
 ?>
