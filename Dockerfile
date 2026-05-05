@@ -9,7 +9,8 @@ RUN apt-get update && \
 RUN a2dismod mpm_event mpm_worker mpm_prefork 2>/dev/null || true && \
     a2enmod mpm_prefork && \
     a2enmod php8.1
-
+RUN echo "display_errors = On" >> /etc/php/8.1/apache2/php.ini && \
+    echo "error_reporting = E_ALL" >> /etc/php/8.1/apache2/php.ini
 RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 RUN rm -f /var/www/html/index.html
