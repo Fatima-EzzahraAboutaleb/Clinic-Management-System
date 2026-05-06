@@ -88,5 +88,5 @@ foreach ($statements as $statement) {
     }
 }
 
-echo "Tables created successfully!";
+// echo "Tables created successfully!";
 ?>
