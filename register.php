@@ -1,54 +1,100 @@
 <?php
-require_once 'config/database.php';
+session_start();
+require_once 'config/database.php'; // doit fournir $pdo (PDO)
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+$csrf_token = $_SESSION['csrf_token'];
 
 $error = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $email = $_POST['email'];
-    $full_name = $_POST['full_name'];
-    $role = $_POST['role'];
-    $phone = $_POST['phone'] ?? '';
-
-    $check_query = "SELECT * FROM users WHERE username = '$username'";
-    $result = $conn->query($check_query);
-
-    if ($result->num_rows > 0) {
-        $error = "Username already exists!";
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $error = "Erreur de validation du formulaire. Veuillez réessayer.";
     } else {
-        $insert_query = "INSERT INTO users (username, password, email, full_name, role, phone) 
-                         VALUES ('$username', '$password', '$email', '$full_name', '$role', '$phone')";
-        
-        if ($conn->query($insert_query) === TRUE) {
-            $user_id = $conn->insert_id;
-            
-            // Create patient or doctor profile
-            if ($role === 'patient') {
-                $age = $_POST['age'] ?? 0;
-                $gender = $_POST['gender'] ?? 'Other';
-                $medical_history = $_POST['medical_history'] ?? '';
-                
-                $profile_query = "INSERT INTO patients (user_id, age, gender, medical_history, phone) 
-                                 VALUES ($user_id, $age, '$gender', '$medical_history', '$phone')";
-                $conn->query($profile_query);
-            } elseif ($role === 'doctor') {
-                $specialty = $_POST['specialty'] ?? '';
-                
-                $profile_query = "INSERT INTO doctors (user_id, specialty, phone) 
-                                 VALUES ($user_id, '$specialty', '$phone')";
-                $conn->query($profile_query);
-            }
-            
-            $success = "Registration successful! <a href='login.php'>Login here</a>";
+        $username   = trim($_POST['username'] ?? '');
+        $password   = $_POST['password'] ?? '';
+        $email      = trim($_POST['email'] ?? '');
+        $full_name  = trim($_POST['full_name'] ?? '');
+        $role       = $_POST['role'] ?? '';
+        $phone      = trim($_POST['phone'] ?? '');
+
+        if (empty($username) || empty($password) || empty($email) || empty($full_name) || empty($role)) {
+            $error = "Tous les champs obligatoires doivent être remplis.";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = "Adresse email invalide.";
+        } elseif (!in_array($role, ['patient', 'doctor'])) {
+            $error = "Rôle invalide.";
+        } elseif (strlen($username) < 3 || strlen($username) > 50) {
+            $error = "Nom d'utilisateur entre 3 et 50 caractères.";
+        } elseif (strlen($password) < 6) {
+            $error = "Mot de passe ≥ 6 caractères.";
         } else {
-            $error = "Registration failed: " . $conn->error;
+            try {
+                $stmtCheck = $pdo->prepare("SELECT id FROM users WHERE username = :username OR email = :email");
+                $stmtCheck->execute([':username' => $username, ':email' => $email]);
+                if ($stmtCheck->fetch()) {
+                    $error = "Nom d'utilisateur ou email déjà utilisé.";
+                } else {
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $stmtUser = $pdo->prepare("
+                        INSERT INTO users (username, password, email, full_name, role, phone)
+                        VALUES (:username, :password, :email, :full_name, :role, :phone)
+                    ");
+                    $stmtUser->execute([
+                        ':username'  => $username,
+                        ':password'  => $hashedPassword,
+                        ':email'     => $email,
+                        ':full_name' => $full_name,
+                        ':role'      => $role,
+                        ':phone'     => $phone
+                    ]);
+                    $user_id = $pdo->lastInsertId();
+
+                    if ($role === 'patient') {
+                        $age = filter_var($_POST['age'] ?? 0, FILTER_VALIDATE_INT);
+                        $gender = $_POST['gender'] ?? 'Other';
+                        $medical_history = trim($_POST['medical_history'] ?? '');
+                        if ($age === false || $age < 0 || $age > 120) throw new Exception("Âge invalide.");
+                        if (!in_array($gender, ['Male', 'Female', 'Other'])) throw new Exception("Genre invalide.");
+                        $stmtProfile = $pdo->prepare("
+                            INSERT INTO patients (user_id, age, gender, medical_history, phone)
+                            VALUES (:user_id, :age, :gender, :medical_history, :phone)
+                        ");
+                        $stmtProfile->execute([
+                            ':user_id'         => $user_id,
+                            ':age'             => $age,
+                            ':gender'          => $gender,
+                            ':medical_history' => $medical_history,
+                            ':phone'           => $phone
+                        ]);
+                    } elseif ($role === 'doctor') {
+                        $specialty = trim($_POST['specialty'] ?? '');
+                        if (empty($specialty)) throw new Exception("Spécialité requise.");
+                        $stmtProfile = $pdo->prepare("
+                            INSERT INTO doctors (user_id, specialty, phone)
+                            VALUES (:user_id, :specialty, :phone)
+                        ");
+                        $stmtProfile->execute([
+                            ':user_id'   => $user_id,
+                            ':specialty' => $specialty,
+                            ':phone'     => $phone
+                        ]);
+                    }
+                    $success = "Inscription réussie ! <a href='login.php'>Connectez-vous ici</a>";
+                }
+            } catch (PDOException $e) {
+                error_log($e->getMessage());
+                $error = "Erreur technique, veuillez réessayer.";
+            } catch (Exception $e) {
+                $error = $e->getMessage();
+            }
         }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>

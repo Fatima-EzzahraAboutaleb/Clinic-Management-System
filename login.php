@@ -5,28 +5,42 @@ require_once 'config/database.php';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'];
+
+    $username = trim($_POST['username']);
     $password = $_POST['password'];
 
-    $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
-    $result = $conn->query($query);
+    // 🔐 PREPARED STATEMENT (anti SQL Injection)
+    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
 
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
-        
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['role'] = $user['role'];
-        $_SESSION['full_name'] = $user['full_name'];
 
-        header('Location: dashboard.php');
-        exit();
+        // 🔐 PASSWORD CHECK (si hashé)
+        if ($password === $user['password']) { // (V0 simple)
+            
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['full_name'] = $user['full_name'];
+
+            header('Location: dashboard.php');
+            exit();
+
+        } else {
+            $error = "Invalid username or password!";
+        }
+
     } else {
         $error = "Invalid username or password!";
     }
+
+    $stmt->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
